@@ -1,0 +1,96 @@
+var myApp = angular.module('myapp', ['ngRoute', 'ngResource']);
+
+//Factory
+myApp.factory('Posts', ['$resource',function($resource){
+  return $resource('/posts.json', {},{
+    query: { method: 'GET', isArray: true },
+    create: { method: 'POST' }
+  })
+}]);
+
+myApp.factory('Post', ['$resource', function($resource){
+  return $resource('/posts/:id.json', {}, {
+    show: { method: 'GET' },
+    update: { method: 'PUT', params: {id: '@id'} },
+    delete: { method: 'DELETE', params: {id: '@id'} }
+  });
+}]);
+myApp.factory('PostProfile', ['$resource', function($resource){
+  return $resource('/posts/:id/profile.json', {}, {
+    profile: {method: 'GET', isArray: false}
+  });
+}]);
+myApp.factory('PostImage', ['$resource', function($resource){
+  return $resource('/posts/:id/add_image.json', {}, {
+    add_image: {method: 'PUT'}
+  });
+}]);
+//Controller
+myApp.controller("PostListCtr", ['$scope', '$http', '$resource', 'Posts', 'Post', '$location', function($scope, $http, $resource, Posts, Post, $location) {
+  $scope.posts = Posts.query();
+  $scope.deletePost = function (PostId) {
+    if (confirm("Are you sure you want to delete this Post?")){
+      Post.delete({ id: PostId }, function(){
+        $scope.posts = Posts.query();
+        $location.path('/');
+      });
+    }
+  };
+}]);
+myApp.controller('PostProfileCtr', function($scope, $resource, PostProfile, $location, $routeParams){
+  $scope.post = PostProfile.get({ id: $routeParams.id });
+});
+
+myApp.controller("PostUpdateCtr", ['$scope', '$resource', 'Post', '$location', '$routeParams', function($scope, $resource, Post, $location, $routeParams) {
+  $scope.post = Post.get({id: $routeParams.id})
+  $scope.update = function(){
+    if ($scope.postForm.$valid){
+      Post.update({id: $scope.post.id},{Post: $scope.post},function(){
+      $location.path('/');
+      }, function(error) {
+        console.log(error)
+      });
+    }
+  };
+  
+}]);
+
+myApp.controller("PostAddCtr", ['$scope', '$resource', 'Posts', '$location', function($scope, $resource, Posts, $location) {
+  $scope.save = function () {
+    if ($scope.postForm.$valid){
+      Posts.create({Post: $scope.post}, function(){
+        $location.path('/');
+      }, function(error){
+      console.log(error)
+      });
+    }
+  }
+}]);
+
+//Routes
+myApp.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
+  $routeProvider.when('/posts',{
+    templateUrl: '/templates/posts/index.html',
+    controller: 'PostListCtr'
+  });
+  $routeProvider.when('/posts/new', {
+    templateUrl: '/templates/posts/new.html',
+    controller: 'PostAddCtr'
+  });
+  $routeProvider.when('/posts/:id/edit', {
+    templateUrl: '/templates/posts/edit.html',
+    controller: "PostUpdateCtr"
+  });
+  $routeProvider.when('/posts/:id/profile', {
+    templateUrl: '/templates/posts/profile.html',
+    controller: "PostProfileCtr"
+  });
+  $routeProvider.when('/posts/:id/add_image', {
+    templateUrl: '/templates/posts/add_image.html',
+    controller: "PostUpdateCtr"
+  });
+  $routeProvider.otherwise({
+    redirectTo: '/posts'
+  });
+  }
+]);

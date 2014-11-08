@@ -1,0 +1,22 @@
+<br/>
+<div class="row">
+  <div class="col-md-12">
+    <a class="btn btn-primary" href="#/posts/new">Create a post</a>
+    <h3 class="block">post</h3>
+    <table class="table table-striped">
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th></th>
+      </tr>
+      <tr ng-show="post">
+        <td>{{post.title}}</td>
+        <td>{{post.description}}</td>
+        <td><img ng-src="{{post.picture_url.thumb.url}}"/></td>
+        <td>
+        <a href="#/posts/{{post.id}}/edit">Edit</a> |<a href="" ng-click="deletePost(post.id)">Remove</a>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
